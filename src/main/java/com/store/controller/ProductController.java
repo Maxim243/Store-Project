@@ -1,5 +1,6 @@
 package com.store.controller;
 
+import com.store.dto.ProductAggregatedResponseDTO;
 import com.store.dto.ProductDTO;
 import com.store.service.ProductService;
 import lombok.Data;
@@ -18,7 +19,7 @@ public class ProductController {
     private final ProductService productService;
 
     @GetMapping("/all")
-    public List<ProductDTO> findAllProducts() {
-        return productService.findAllProductsDTO();
+    public ProductAggregatedResponseDTO findAllProducts() {
+        return productService.findProductAggregatedDTO();
     }
 }
