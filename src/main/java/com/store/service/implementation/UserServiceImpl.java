@@ -1,6 +1,7 @@
 package com.store.service.implementation;
 
 import com.store.dto.MessageResponseDTO;
+import com.store.exception.NoUserFoundException;
 import com.store.exception.UserAlreadyExistsException;
 import com.store.exception.type.ExceptionType;
 import com.store.model.CartEntity;
@@ -74,5 +75,10 @@ public class UserServiceImpl implements UserService {
                 .builder()
                 .message("Logout successfully")
                 .build();
+    }
+
+    @Override
+    public UserEntity findByEmail(String email) {
+        return userRepository.findByEmail(email).orElseThrow(() -> NoUserFoundException.of(ExceptionType.NO_USER_FOUND));
     }
 }
