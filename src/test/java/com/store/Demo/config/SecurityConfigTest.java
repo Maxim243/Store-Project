@@ -4,6 +4,7 @@ import com.store.config.SecurityConfig;
 import com.store.controller.CartController;
 import com.store.controller.ProductController;
 import com.store.service.CartItemService;
+import com.store.service.CartService;
 import com.store.service.ProductService;
 import com.store.service.implementation.CustomUserDetailsServiceImpl;
 import lombok.SneakyThrows;
@@ -34,6 +35,9 @@ class SecurityConfigTest {
 
     @MockitoBean
     private ProductService productService;
+
+    @MockitoBean
+    private CartService cartService;
 
     @MockitoBean
     private CustomUserDetailsServiceImpl userDetailsService;
