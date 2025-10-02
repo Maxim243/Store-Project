@@ -51,7 +51,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductEntity findProductById(Long id) {
-        return productRepository.findById(id).orElseThrow(() -> NoProductAvailableException.of(ExceptionType.NO_AVAILABLE_PRODUCTS_FOUND));
+        return productRepository.findById(id).orElseThrow(() -> NoProductAvailableException.of(ExceptionType.NO_AVAILABLE_PRODUCT_FOUND));
     }
 
     @Override
@@ -59,7 +59,6 @@ public class ProductServiceImpl implements ProductService {
         if (productEntity.getAvailable() < requestedQuantity) {
             throw new NoProductAvailableException(ExceptionType.NOT_ENOUGH_PRODUCTS_FOUND, requestedQuantity, productEntity.getAvailable());
         }
-        productEntity.setAvailable(productEntity.getAvailable() - requestedQuantity);
         productRepository.save(productEntity);
     }
 

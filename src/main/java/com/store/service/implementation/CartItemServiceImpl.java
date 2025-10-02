@@ -1,6 +1,8 @@
 package com.store.service.implementation;
 
 import com.store.dto.ProductDTO;
+import com.store.exception.NoProductAvailableException;
+import com.store.exception.type.ExceptionType;
 import com.store.model.CartEntity;
 import com.store.model.CartItemEntity;
 import com.store.model.ProductEntity;
@@ -54,6 +56,16 @@ public class CartItemServiceImpl implements CartItemService {
                             .build();
                     cartItemRepository.save(cartItemEntity);
                 });
+    }
+
+    @Override
+    public void removeItemFromCart(Long productId, String userEmail) {
+        CartEntity cartEntity = cartService.findCartByUserEmail(userEmail);
+
+        CartItemEntity cartItemEntityToBeDeleted = cartItemRepository.findByCartIdAndProductId(cartEntity.getId(), productId).orElseThrow(() ->
+                NoProductAvailableException.of(ExceptionType.NO_AVAILABLE_PRODUCT_FOUND));
+
+        cartItemRepository.delete(cartItemEntityToBeDeleted);
     }
 
 }

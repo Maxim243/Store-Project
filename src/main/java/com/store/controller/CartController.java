@@ -2,25 +2,38 @@ package com.store.controller;
 
 import com.store.dto.AddItemDTO;
 import com.store.dto.ProductDTO;
+import com.store.dto.ViewCartResponseDTO;
 import com.store.service.CartItemService;
+import com.store.service.CartService;
 import com.store.utils.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/cart/items")
+@RequestMapping("/cart")
 @RequiredArgsConstructor
 public class CartController {
 
     private final CartItemService cartItemService;
 
-    @PostMapping
+    private final CartService cartService;
+
+    @PostMapping("/items")
     public ProductDTO addProductItemToCart(@RequestBody AddItemDTO addItemDTO,
-                                                           @AuthenticationPrincipal CustomUserDetails user) {
+                                           @AuthenticationPrincipal CustomUserDetails user) {
         return cartItemService.addItemToCart(addItemDTO.id(), addItemDTO.quantity(), user.getUsername());
+    }
+
+    @GetMapping
+    public ViewCartResponseDTO viewCartItems(@AuthenticationPrincipal CustomUserDetails user) {
+        return cartService.viewCartItems(user.getUsername());
+    }
+
+    @DeleteMapping("/item/{id}")
+    public ResponseEntity<Void> deleteCartItem(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetails user) {
+        cartItemService.removeItemFromCart(id, user.getUsername());
+        return ResponseEntity.ok().build();
     }
 }
