@@ -1,6 +1,7 @@
 package com.store.service.implementation;
 
 import com.store.dto.MessageResponseDTO;
+import com.store.exception.NoUserFoundException;
 import com.store.exception.UserAlreadyExistsException;
 import com.store.exception.type.ExceptionType;
 import com.store.model.CartEntity;
@@ -43,7 +44,7 @@ public class UserServiceImpl implements UserService {
         log.info("Attempting to register new user with email: {}", email);
         if (existsUserByEmail(email)) {
             log.warn("Registration failed: User with email {} already exists", email);
-            throw new UserAlreadyExistsException(ExceptionType.USER_ALREADY_EXIST);
+            throw new UserAlreadyExistsException(ExceptionType.USER_ALREADY_EXISTS);
         }
         UserEntity newUser = UserEntity.builder().email(email).password(passwordEncoder.encode(password)).build();
         userRepository.save(newUser);
@@ -74,5 +75,10 @@ public class UserServiceImpl implements UserService {
                 .builder()
                 .message("Logout successfully")
                 .build();
+    }
+
+    @Override
+    public UserEntity findByEmail(String email) {
+        return userRepository.findByEmail(email).orElseThrow(() -> NoUserFoundException.of(ExceptionType.NO_USER_FOUND));
     }
 }

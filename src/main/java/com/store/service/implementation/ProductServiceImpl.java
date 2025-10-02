@@ -12,8 +12,10 @@ import com.store.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -38,7 +40,6 @@ public class ProductServiceImpl implements ProductService {
                 .priceGrouping(priceRangeProductsFuture.join())
                 .availability(availabilityFuture.join())
                 .build();
-
     }
 
     @Override
@@ -51,17 +52,47 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductEntity findProductById(Long id) {
-        return productRepository.findById(id).orElseThrow(() -> NoProductAvailableException.of(ExceptionType.NO_AVAILABLE_PRODUCTS_FOUND));
+        return productRepository.findById(id).orElseThrow(() -> NoProductAvailableException.of(ExceptionType.NO_AVAILABLE_PRODUCT_FOUND));
     }
 
     @Override
     public void adjustProductStock(ProductEntity productEntity, Long requestedQuantity) {
-        if (productEntity.getAvailable() < requestedQuantity) {
-            throw new NoProductAvailableException(ExceptionType.NOT_ENOUGH_PRODUCTS_FOUND, requestedQuantity, productEntity.getAvailable());
+        if (productEntity.getAvailableQuantity() < requestedQuantity) {
+            throw new NoProductAvailableException(ExceptionType.NOT_ENOUGH_PRODUCTS_FOUND, requestedQuantity, productEntity.getAvailableQuantity());
         }
-        productEntity.setAvailable(productEntity.getAvailable() - requestedQuantity);
-        productRepository.save(productEntity);
     }
+
+    @Override
+    public void adjustEveryProductInStock(Map<Long, Long> productIdToQuantityMap) {
+        productIdToQuantityMap.forEach((productId, quantityRequested) -> {
+            ProductEntity productEntity = productRepository.findById(productId).orElseThrow(() -> NoProductAvailableException.of(ExceptionType.NO_AVAILABLE_PRODUCT_FOUND));
+            adjustProductStock(productEntity, quantityRequested);
+        });
+    }
+
+    @Override
+    public Double calculateOrderPrice(Map<Long, Long> productIdToQuantityMap) {
+        return productIdToQuantityMap.entrySet().stream()
+                .mapToDouble(entry -> {
+                    ProductEntity product = findProductById(entry.getKey());
+                    return product.getPrice() * entry.getValue();
+                })
+                .sum();
+    }
+
+    @Override
+    @Transactional
+    public void updateProductStock(Map<Long, Long> productIdToQuantityRequestedMap) {
+        List<ProductEntity> products = productRepository.findAllById(productIdToQuantityRequestedMap.keySet());
+
+        for (ProductEntity product : products) {
+            Long orderedQuantity = productIdToQuantityRequestedMap.get(product.getId());
+            product.setAvailableQuantity(product.getAvailableQuantity() - orderedQuantity);
+        }
+
+        productRepository.saveAll(products);
+    }
+
 
     private PriceGroupingProductDTO groupByPriceRange() {
         List<ProductEntity> products = productRepository.findAll();
@@ -81,8 +112,8 @@ public class ProductServiceImpl implements ProductService {
     private ProductAvailabilityDTO groupByAvailability() {
         List<ProductEntity> products = productRepository.findAll();
 
-        Long available = products.stream().filter(productEntity -> productEntity.getAvailable() > 0).count();
-        Long unavailable = products.stream().filter(productEntity -> productEntity.getAvailable() < 1).count();
+        Long available = products.stream().filter(productEntity -> productEntity.getAvailableQuantity() > 0).count();
+        Long unavailable = products.stream().filter(productEntity -> productEntity.getAvailableQuantity() < 1).count();
 
         return ProductAvailabilityDTO
                 .builder()
