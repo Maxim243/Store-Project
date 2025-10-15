@@ -59,7 +59,6 @@ public class ProductServiceImpl implements ProductService {
         if (productEntity.getAvailable() < requestedQuantity) {
             throw new NoProductAvailableException(ExceptionType.NOT_ENOUGH_PRODUCTS_FOUND, requestedQuantity, productEntity.getAvailable());
         }
-        productEntity.setAvailable(productEntity.getAvailable() - requestedQuantity);
         productRepository.save(productEntity);
     }
 
