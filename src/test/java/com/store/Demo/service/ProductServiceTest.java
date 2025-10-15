@@ -18,7 +18,8 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ProductServiceTest {
@@ -81,7 +82,7 @@ class ProductServiceTest {
         assertThatThrownBy(() -> productService.findProductById(1L))
                 .isInstanceOf(NoProductAvailableException.class)
                 .extracting("exceptionType")
-                .isEqualTo(ExceptionType.NO_AVAILABLE_PRODUCTS_FOUND);
+                .isEqualTo(ExceptionType.NO_AVAILABLE_PRODUCT_FOUND);
     }
 
     @Test

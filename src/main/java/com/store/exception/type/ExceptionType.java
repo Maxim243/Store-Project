@@ -8,7 +8,7 @@ import lombok.Getter;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public enum ExceptionType {
 
-    NO_AVAILABLE_PRODUCTS_FOUND("No available products found", 404),
+    NO_AVAILABLE_PRODUCT_FOUND("No available product found", 404),
     NOT_ENOUGH_PRODUCTS_FOUND("Not enough available products. Requested: %d, Available: %d", 404),
     USER_ALREADY_EXIST("User already exist", 409),
     UNAUTHORIZED_USER("Unauthorized user", 401),

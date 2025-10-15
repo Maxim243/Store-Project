@@ -7,6 +7,7 @@ import com.store.service.CartItemService;
 import com.store.service.CartService;
 import com.store.utils.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,5 +29,11 @@ public class CartController {
     @GetMapping
     public ViewCartResponseDTO viewCartItems(@AuthenticationPrincipal CustomUserDetails user) {
         return cartService.viewCartItems(user.getUsername());
+    }
+
+    @DeleteMapping("/item/{id}")
+    public ResponseEntity<Void> deleteCartItem(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetails user) {
+        cartItemService.removeItemFromCart(id, user.getUsername());
+        return ResponseEntity.ok().build();
     }
 }
