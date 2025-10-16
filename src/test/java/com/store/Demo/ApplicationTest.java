@@ -1,9 +1,6 @@
 package com.store.Demo;
 
-import com.store.repository.CartItemRepository;
-import com.store.repository.CartRepository;
-import com.store.repository.ProductRepository;
-import com.store.repository.UserRepository;
+import com.store.repository.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
@@ -25,6 +22,9 @@ class ApplicationTest {
 
     @MockitoBean
     private ProductRepository productRepository;
+
+    @MockitoBean
+    private OrderRepository orderRepository;
 
     @Test
     void contextLoads() {

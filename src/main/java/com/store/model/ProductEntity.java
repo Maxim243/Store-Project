@@ -19,7 +19,7 @@ public class ProductEntity {
 
     private String title;
 
-    private Long available;
+    private Long availableQuantity;
 
     private Double price;
 }

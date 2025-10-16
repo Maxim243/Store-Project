@@ -68,7 +68,7 @@ class CartServiceTest {
         assertThatThrownBy(() -> cartService.findCartByUserEmail("missing@mail.com"))
                 .isInstanceOf(NoCartFoundException.class)
                 .extracting("exceptionType")
-                .isEqualTo(ExceptionType.NO_CART_FOUNT);
+                .isEqualTo(ExceptionType.NO_CART_FOUND);
     }
 }
 

@@ -36,7 +36,7 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public CartEntity findCartByUserEmail(String userEmail) {
-        return cartRepository.findByUserEmail(userEmail).orElseThrow(() -> NoCartFoundException.of(ExceptionType.NO_CART_FOUNT));
+        return cartRepository.findByUserEmail(userEmail).orElseThrow(() -> NoCartFoundException.of(ExceptionType.NO_CART_FOUND));
     }
 
     @Override
