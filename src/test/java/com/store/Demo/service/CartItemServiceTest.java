@@ -1,6 +1,7 @@
 package com.store.Demo.service;
 
 import com.store.dto.ProductDTO;
+import com.store.exception.NoCartItemFoundException;
 import com.store.exception.NoProductAvailableException;
 import com.store.exception.type.ExceptionType;
 import com.store.model.CartEntity;
@@ -18,7 +19,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.convert.ConversionService;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
@@ -135,6 +138,59 @@ class CartItemServiceTest {
         verify(cartItemRepository, never()).delete(any());
     }
 
+    @Test
+    void removeAllItemsFromCartByIds_shouldRemoveMatchingItems() {
+        String userEmail = "test@example.com";
+        Long productId1 = 1L;
+        Long productId2 = 2L;
+        Set<Long> productIdsToRemove = Set.of(productId1);
 
+        ProductEntity product1 = ProductEntity.builder().id(productId1).build();
+        ProductEntity product2 = ProductEntity.builder().id(productId2).build();
+
+        CartItemEntity item1 = CartItemEntity.builder().product(product1).build();
+        CartItemEntity item2 = CartItemEntity.builder().product(product2).build();
+
+        CartEntity cart = CartEntity.builder()
+                .items(new ArrayList<>(List.of(item1, item2)))
+                .build();
+
+        when(cartService.findCartByUserEmail(userEmail)).thenReturn(cart);
+
+        cartItemService.removeAllItemsFromCartByIds(productIdsToRemove, userEmail);
+
+        assertThat(cart.getItems()).containsExactly(item2);
+        verify(cartService).findCartByUserEmail(userEmail);
+    }
+
+    @Test
+    void findByCartIdAndProductId_shouldReturnCartItem_whenFound() {
+        Long cartId = 1L;
+        Long productId = 2L;
+        CartItemEntity cartItem = new CartItemEntity();
+
+        when(cartItemRepository.findByCartIdAndProductId(cartId, productId))
+                .thenReturn(Optional.of(cartItem));
+
+        CartItemEntity result = cartItemService.findByCartIdAndProductId(cartId, productId);
+
+        assertThat(result).isEqualTo(cartItem);
+        verify(cartItemRepository).findByCartIdAndProductId(cartId, productId);
+    }
+
+    @Test
+    void findByCartIdAndProductId_shouldThrowException_whenNotFound() {
+        Long cartId = 1L;
+        Long productId = 2L;
+
+        when(cartItemRepository.findByCartIdAndProductId(cartId, productId))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> cartItemService.findByCartIdAndProductId(cartId, productId))
+                .isInstanceOf(NoCartItemFoundException.class)
+                .hasMessageContaining("No available cart item found");
+
+        verify(cartItemRepository).findByCartIdAndProductId(cartId, productId);
+    }
 }
 

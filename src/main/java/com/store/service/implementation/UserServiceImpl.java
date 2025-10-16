@@ -44,7 +44,7 @@ public class UserServiceImpl implements UserService {
         log.info("Attempting to register new user with email: {}", email);
         if (existsUserByEmail(email)) {
             log.warn("Registration failed: User with email {} already exists", email);
-            throw new UserAlreadyExistsException(ExceptionType.USER_ALREADY_EXIST);
+            throw new UserAlreadyExistsException(ExceptionType.USER_ALREADY_EXISTS);
         }
         UserEntity newUser = UserEntity.builder().email(email).password(passwordEncoder.encode(password)).build();
         userRepository.save(newUser);

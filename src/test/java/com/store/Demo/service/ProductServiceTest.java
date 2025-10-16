@@ -15,10 +15,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.convert.ConversionService;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatCode;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -97,7 +99,7 @@ class ProductServiceTest {
 
     @Test
     void findProductAggregatedDTO_shouldReturnAggregatedResponse() {
-            ProductEntity productEntity = ProductEntity
+        ProductEntity productEntity = ProductEntity
                 .builder()
                 .id(1L)
                 .title("Product A")
@@ -133,4 +135,76 @@ class ProductServiceTest {
         verify(productRepository, times(3)).findAll();
         verify(conversionService).convert(productEntity, ProductDTO.class);
     }
+
+    @Test
+    void adjustEveryProductInStock_shouldNotThrowException() {
+        ProductEntity product = ProductEntity.builder()
+                .id(1L)
+                .price(50.0)
+                .availableQuantity(5L)
+                .build();
+
+        Map<Long, Long> productQuantityMap = Map.of(1L, 3L);
+
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+
+        assertThatCode(() -> productService.adjustEveryProductInStock(productQuantityMap))
+                .doesNotThrowAnyException();
+
+        verify(productRepository).findById(1L);
+    }
+
+    @Test
+    void adjustEveryProductInStock_shouldThrowException_whenNotEnoughStock() {
+        ProductEntity product = ProductEntity.builder()
+                .id(1L)
+                .availableQuantity(2L)
+                .build();
+
+        Map<Long, Long> productQuantityMap = Map.of(1L, 5L);
+
+        when(productRepository.findById(1L))
+                .thenReturn(Optional.of(product));
+
+        assertThatThrownBy(() -> productService.adjustEveryProductInStock(productQuantityMap))
+                .isInstanceOf(NoProductAvailableException.class)
+                .hasMessageContaining(String.format("Not enough available products. Requested: %d, Available: %d", productQuantityMap.get(1L), product.getAvailableQuantity()));
+    }
+
+    @Test
+    void calculateOrderPrice_shouldReturnCorrectTotal() {
+        ProductEntity product1 = ProductEntity.builder().id(1L).price(10.0).build();
+        ProductEntity product2 = ProductEntity.builder().id(2L).price(20.0).build();
+
+        Map<Long, Long> productQuantityMap = Map.of(1L, 2L, 2L, 3L);
+
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product1));
+        when(productRepository.findById(2L)).thenReturn(Optional.of(product2));
+
+        Double totalPrice = productService.calculateOrderPrice(productQuantityMap);
+
+        assertThat(totalPrice).isEqualTo(2 * 10.0 + 3 * 20.0);
+        verify(productRepository).findById(1L);
+        verify(productRepository).findById(2L);
+    }
+
+    @Test
+    void updateProductStock_shouldUpdateQuantityAndSaveAll() {
+        ProductEntity product1 = ProductEntity.builder().id(1L).availableQuantity(10L).build();
+        ProductEntity product2 = ProductEntity.builder().id(2L).availableQuantity(5L).build();
+
+        Map<Long, Long> productQuantityMap = Map.of(1L, 3L, 2L, 2L);
+
+        when(productRepository.findAllById(anySet())).thenReturn(List.of(product1, product2));
+
+        productService.updateProductStock(productQuantityMap);
+
+        assertThat(product1.getAvailableQuantity()).isEqualTo(7L);
+        assertThat(product2.getAvailableQuantity()).isEqualTo(3L);
+
+        verify(productRepository).findAllById(anySet());
+        verify(productRepository).saveAll(List.of(product1, product2));
+    }
+
+
 }
