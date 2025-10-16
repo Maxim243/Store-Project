@@ -1,5 +1,6 @@
 package com.store.Demo.service;
 
+import com.store.exception.NoUserFoundException;
 import com.store.exception.UserAlreadyExistsException;
 import com.store.exception.type.ExceptionType;
 import com.store.model.CartEntity;
@@ -76,7 +77,7 @@ class UserServiceTest {
         assertThatThrownBy(() -> userService.register("test@mail.com", "password"))
                 .isInstanceOf(UserAlreadyExistsException.class)
                 .extracting("exceptionType")
-                .isEqualTo(ExceptionType.USER_ALREADY_EXIST);
+                .isEqualTo(ExceptionType.USER_ALREADY_EXISTS);
 
         verify(userRepository, never()).save(any());
         verify(cartRepository, never()).save(any());
@@ -103,6 +104,30 @@ class UserServiceTest {
     void logout_shouldInvalidateSession() {
         userService.logout(httpSession);
         verify(httpSession).invalidate();
+    }
+
+    @Test
+    void findByEmail_shouldReturnUser_whenUserExists() {
+        String email = "test@example.com";
+        UserEntity mockUser = new UserEntity();
+        mockUser.setEmail(email);
+
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(mockUser));
+
+        UserEntity user = userService.findByEmail(email);
+
+        assertThat(user).isNotNull();
+        assertThat(user.getEmail()).isEqualTo(email);
+    }
+
+    @Test
+    void findByEmail_shouldThrowException_whenUserDoesNotExist() {
+        String email = "notfound@example.com";
+        when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> userService.findByEmail(email))
+                .isInstanceOf(NoUserFoundException.class)
+                .hasMessageContaining(ExceptionType.NO_USER_FOUND.getMessage());
     }
 }
 
